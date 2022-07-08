@@ -2,7 +2,14 @@ import React, { useState } from "react";
 
 import "./App.css";
 import MiniSearch from "minisearch";
-import { Typography, Container, TextField, Card, Button } from "@mui/material";
+import {
+  Typography,
+  Container,
+  TextField,
+  Card,
+  Button,
+  makeStyles,
+} from "@mui/material";
 
 function App() {
   //getting list of issues from json file
@@ -10,18 +17,19 @@ function App() {
 
   //what state will we need?
   const [searchTerm, setSearchTerm] = useState("");
-  const [autoSuggestOn, setAutoSuggestOn] = useState(true);
+  const [autoSuggestOn, setAutoSuggestOn] = useState(false);
   const [results, setResults] = useState();
 
   let miniSearch = new MiniSearch({
     fields: ["name"], // fields to index for full-text search
     storeFields: ["name"], // fields to return with search results
   });
+  // Index all documents
+  miniSearch.addAll(issues);
 
   const onChange = (e) => {
     setSearchTerm(e.target.value);
-    // Index all documents
-    miniSearch.addAll(issues);
+
     let outcome = null;
     if (!autoSuggestOn) {
       // Search with default options
@@ -36,6 +44,15 @@ function App() {
 
   const onClick = (e) => {
     setAutoSuggestOn(!autoSuggestOn);
+  };
+
+  const onClickSuggestion = (e) => {
+    console.log(e.target.innerText);
+    setAutoSuggestOn(!autoSuggestOn);
+    setResults([]);
+    let outcome = miniSearch.search(e.target.innerText);
+    console.log("Outcome", outcome);
+    setResults(outcome);
   };
   // display list of suggestions
   // onSuggestionClick set the state for the search field and rerun query
@@ -67,7 +84,9 @@ function App() {
             return (
               <Card key={result.name}>
                 {result.suggestion && (
-                  <Typography>{result.suggestion}</Typography>
+                  <Typography onClick={(e) => onClickSuggestion(e)}>
+                    {result.suggestion}
+                  </Typography>
                 )}
                 {result.name && <Typography>{result.name}</Typography>}
               </Card>
